@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>נוכחות בכיתה</title>
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="נוכחות">
+<meta name="application-name" content="נוכחות">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
   :root{
     --bg:#f4f6fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --line:#e5e7eb;
@@ -75,6 +83,7 @@
     <span id="dateLabel"></span>
     <button id="nextDay" title="יום הבא">‹</button>
   </div>
+  <button class="hbtn" id="btnInstall" hidden>📲 התקנה כאפליקציה</button>
   <button class="hbtn" id="btnSummary">סיכום יום</button>
   <button class="hbtn" id="btnStudents">⚙️ תלמידים</button>
 </header>
@@ -325,6 +334,23 @@ document.getElementById('copySummary').onclick = ()=>{
 // ---------- misc ----------
 let tt;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2000); }
+
+// ---------- app install / offline ----------
+let installPrompt = null;
+const btnInstall = document.getElementById('btnInstall');
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; btnInstall.hidden = false; });
+btnInstall.onclick = async () => {
+  if(!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null; btnInstall.hidden = true;
+};
+window.addEventListener('appinstalled', () => { btnInstall.hidden = true; toast('האפליקציה הותקנה ✔'); });
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+// ask the browser not to clear our saved data when space runs low
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 
 pruneOld(); save(); render();
 </script>
