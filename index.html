@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>נוכחות בכיתה</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#4f46e5; --present:#16a34a; --present-bg:#dcfce7; --absent:#dc2626; --absent-bg:#fee2e2;
+    --called:#d97706; --called-bg:#fef3c7; --day:#64748b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);}
+  header{background:var(--accent);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:5;box-shadow:0 2px 6px #0002}
+  header h1{margin:0;font-size:22px;flex:1}
+  .datebox{display:flex;align-items:center;gap:6px;font-size:16px}
+  .datebox button{background:#fff3;border:0;color:#fff;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer}
+  .datebox button:disabled{opacity:.3;cursor:default}
+  .hbtn{background:#fff;color:var(--accent);border:0;border-radius:10px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer}
+  main{max-width:1100px;margin:0 auto;padding:14px 16px 40px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;font-size:15px;cursor:pointer;color:var(--text)}
+  .tab small{color:var(--muted);margin-inline-start:4px}
+  .tab.active{border-color:var(--accent);background:var(--accent);color:#fff}
+  .tab.active small{color:#e0e7ff}
+  .tab.add{border-style:dashed;color:var(--accent);font-weight:600}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .stat{background:var(--card);border-radius:10px;padding:6px 12px;font-size:15px;border:1px solid var(--line)}
+  .stat b{font-size:18px}
+  .stat.p b{color:var(--present)} .stat.a b{color:var(--absent)} .stat.u b{color:var(--muted)}
+  .spacer{flex:1}
+  .sbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--text)}
+  .sbtn:hover{border-color:var(--accent)}
+  .hint{color:var(--muted);font-size:13px;margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:.15s}
+  .card.p{border-color:var(--present);background:var(--present-bg)}
+  .card.a{border-color:var(--absent);background:var(--absent-bg)}
+  .name{border:0;background:none;font-size:19px;font-weight:600;padding:16px 8px 10px;cursor:pointer;color:var(--text);min-height:64px;width:100%}
+  .state{font-size:13px;font-weight:600;text-align:center;margin-top:-6px;padding-bottom:6px;color:var(--muted)}
+  .card.p .state{color:var(--present)} .card.a .state{color:var(--absent)}
+  .acts{display:flex;border-top:1px solid #0001}
+  .acts button{flex:1;border:0;background:#ffffff80;padding:7px 4px;font-size:13px;cursor:pointer;color:var(--text)}
+  .acts button+button{border-inline-start:1px solid #0001}
+  .acts button.on{background:var(--called-bg);color:var(--called);font-weight:700}
+  .acts button:hover{background:#fff}
+  .out{margin-top:22px;background:var(--card);border-radius:14px;padding:12px 14px;border:1px solid var(--line)}
+  .out h3{margin:0 0 8px;font-size:16px;color:var(--day)}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border-radius:20px;padding:5px 6px 5px 12px;margin:3px;font-size:15px}
+  .chip button{border:0;background:#fff;border-radius:14px;padding:3px 9px;cursor:pointer;font-size:12px;color:var(--accent)}
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:17px}
+  .empty button{margin-top:12px}
+  .big{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 20px;font-size:16px;cursor:pointer}
+  .link{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:15px}
+  dialog{border:0;border-radius:16px;padding:0;width:min(560px,94vw);box-shadow:0 10px 40px #0004}
+  dialog::backdrop{background:#0005}
+  .dlg{padding:18px 20px}
+  .dlg h2{margin:0 0 10px;font-size:20px}
+  .dlg textarea{width:100%;height:300px;font-size:16px;font-family:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;resize:vertical}
+  .dlg .row{display:flex;gap:8px;justify-content:flex-start;margin-top:12px;flex-wrap:wrap}
+  .sum h4{margin:14px 0 4px;font-size:15px}
+  .sum p{margin:0;color:var(--text);font-size:15px;line-height:1.6}
+  .sum .none{color:var(--muted)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:10px;font-size:15px;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+  @media (max-width:520px){ .grid{grid-template-columns:repeat(2,1fr)} header h1{font-size:19px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 נוכחות בכיתה</h1>
+  <div class="datebox">
+    <button id="prevDay" title="יום קודם">›</button>
+    <span id="dateLabel"></span>
+    <button id="nextDay" title="יום הבא">‹</button>
+  </div>
+  <button class="hbtn" id="btnSummary">סיכום יום</button>
+  <button class="hbtn" id="btnStudents">⚙️ תלמידים</button>
+</header>
+
+<main id="main"></main>
+
+<dialog id="dlgStudents">
+  <div class="dlg">
+    <h2>רשימת התלמידים</h2>
+    <p class="hint">שם אחד בכל שורה. אפשר להדביק רשימה שלמה מאקסל או מוורד.</p>
+    <textarea id="taStudents" placeholder="ישראל ישראלי&#10;שרה כהן&#10;..."></textarea>
+    <div class="row">
+      <button class="big" id="saveStudents">שמירה</button>
+      <button class="sbtn" id="sortStudents">מיון א-ב</button>
+      <button class="sbtn" onclick="dlgStudents.close()">ביטול</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgSummary">
+  <div class="dlg sum">
+    <h2 id="sumTitle">סיכום יום</h2>
+    <div id="sumBody"></div>
+    <div class="row">
+      <button class="big" id="copySummary">העתקה (לשליחה בוואטסאפ)</button>
+      <button class="sbtn" onclick="dlgSummary.close()">סגירה</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'classAttendance.v1';
+const KEEP_DAYS = 60;
+const DAYS_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+// ---------- storage ----------
+let db = load();
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && Array.isArray(d.students)) return d;
+  }catch(e){}
+  return {students:[], days:{}, nextId:1};
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch(e){ toast('⚠️ לא הצלחתי לשמור בדפדפן'); }
+}
+
+// ---------- dates ----------
+function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const TODAY = isoDate(new Date());
+let viewDate = TODAY;
+function prettyDate(iso){
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y,m-1,d);
+  return 'יום ' + DAYS_HE[dt.getDay()] + ', ' + d + '.' + m + (iso===TODAY ? ' (היום)' : '');
+}
+function pruneOld(){
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-KEEP_DAYS);
+  const c = isoDate(cutoff);
+  for(const k of Object.keys(db.days)) if(k < c) delete db.days[k];
+}
+
+function day(create){
+  let d = db.days[viewDate];
+  if(!d && create){
+    d = db.days[viewDate] = {allDay:{}, called:{}, lessons:[], cur:0};
+  }
+  return d;
+}
+function nowTime(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+function addLesson(){
+  const d = day(true);
+  d.lessons.push({time:nowTime(), marks:{}});
+  d.cur = d.lessons.length-1;
+  save(); render();
+}
+
+// ---------- render ----------
+const main = document.getElementById('main');
+function esc(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render(){
+  document.getElementById('dateLabel').textContent = prettyDate(viewDate);
+  const dates = Object.keys(db.days).concat(TODAY).sort();
+  const uniq = [...new Set(dates)];
+  const i = uniq.indexOf(viewDate);
+  document.getElementById('prevDay').disabled = i<=0;
+  document.getElementById('nextDay').disabled = i>=uniq.length-1;
+
+  if(!db.students.length){
+    main.innerHTML = `<div class="empty">עוד אין תלמידים ברשימה.<br>
+      <button class="big" onclick="openStudents()">הוספת תלמידים</button><br>
+      <button class="link" onclick="loadDemo()">או: לטעון שמות לדוגמה כדי לראות איך זה נראה</button></div>`;
+    return;
+  }
+
+  const d = day(false);
+  if(!d || !d.lessons.length){
+    main.innerHTML = `<div class="empty">${viewDate===TODAY?'בוקר טוב! ☀️<br>':''}עוד לא הייתה בדיקת נוכחות ב${prettyDate(viewDate).replace(' (היום)','')}.<br>
+      <button class="big" onclick="addLesson()">התחלת בדיקת נוכחות – שיעור 1</button></div>`;
+    return;
+  }
+
+  const L = d.lessons[d.cur];
+  const active = db.students.filter(s=>!d.allDay[s.id]);
+  const gone = db.students.filter(s=>d.allDay[s.id]);
+  let p=0,a=0,u=0;
+  active.forEach(s=>{ const m=L.marks[s.id]; if(m==='p')p++; else if(m==='a')a++; else u++; });
+
+  let h = '<div class="tabs">';
+  d.lessons.forEach((l,idx)=>{
+    h += `<button class="tab ${idx===d.cur?'active':''}" onclick="selLesson(${idx})">שיעור ${idx+1}<small>${l.time}</small></button>`;
+  });
+  h += `<button class="tab add" onclick="addLesson()">+ בדיקה לשיעור הבא</button></div>`;
+
+  h += `<div class="bar">
+    <span class="stat p">נוכחים <b>${p}</b></span>
+    <span class="stat a">חסרים <b>${a}</b></span>
+    <span class="stat u">לא סומנו <b>${u}</b></span>
+    <span class="spacer"></span>
+    <button class="sbtn" onclick="markRest('p')">✔ כל השאר נוכחים</button>
+    <button class="sbtn" onclick="markRest('a')">✘ כל השאר חסרים</button>
+    <button class="sbtn" onclick="clearLesson()">↺ ניקוי</button>
+  </div>
+  <p class="hint">לחיצה על שם: נוכח ← חסר ← לא סומן. "התקשרתי" ו"לא נמצא היום" נשמרים לכל היום.</p>`;
+
+  h += '<div class="grid">';
+  active.forEach(s=>{
+    const m = L.marks[s.id] || '';
+    const label = m==='p'?'✔ נוכח/ת':m==='a'?'✘ חסר/ה':'—';
+    const called = !!d.called[s.id];
+    h += `<div class="card ${m}">
+      <button class="name" onclick="cycle(${s.id})">${esc(s.name)}</button>
+      <div class="state">${label}</div>
+      <div class="acts">
+        <button class="${called?'on':''}" onclick="toggleCalled(${s.id})">📞 ${called?'התקשרתי':'התקשרתי?'}</button>
+        <button onclick="setAllDay(${s.id},true)" title="להסתיר מהבדיקות הבאות היום">🏠 לא היום</button>
+      </div></div>`;
+  });
+  h += '</div>';
+
+  if(gone.length){
+    h += `<div class="out"><h3>🏠 לא נמצאים היום (${gone.length}) – לא מופיעים בבדיקות</h3>`;
+    gone.forEach(s=>{
+      h += `<span class="chip">${esc(s.name)}${d.called[s.id]?' 📞':''}<button onclick="setAllDay(${s.id},false)">הגיע/ה ↩</button></span>`;
+    });
+    h += '</div>';
+  }
+  main.innerHTML = h;
+}
+
+// ---------- actions ----------
+function selLesson(i){ day(true).cur=i; save(); render(); }
+function cycle(id){
+  const L = day(true).lessons[day().cur];
+  const m = L.marks[id];
+  if(!m) L.marks[id]='p'; else if(m==='p') L.marks[id]='a'; else delete L.marks[id];
+  save(); render();
+}
+function markRest(v){
+  const d = day(true), L = d.lessons[d.cur];
+  db.students.forEach(s=>{ if(!d.allDay[s.id] && !L.marks[s.id]) L.marks[s.id]=v; });
+  save(); render();
+}
+function clearLesson(){
+  const d = day(true);
+  if(!confirm('לנקות את כל הסימונים של שיעור '+(d.cur+1)+'?')) return;
+  d.lessons[d.cur].marks = {};
+  save(); render();
+}
+function toggleCalled(id){
+  const d = day(true);
+  if(d.called[id]) delete d.called[id]; else d.called[id]=true;
+  save(); render();
+}
+function setAllDay(id,on){
+  const d = day(true);
+  if(on) d.allDay[id]=true; else delete d.allDay[id];
+  save(); render();
+}
+
+// ---------- day navigation ----------
+function moveDay(dir){
+  const uniq = [...new Set(Object.keys(db.days).concat(TODAY))].sort();
+  const i = uniq.indexOf(viewDate) + dir;
+  if(i>=0 && i<uniq.length){ viewDate = uniq[i]; render(); }
+}
+document.getElementById('prevDay').onclick = ()=>moveDay(-1);
+document.getElementById('nextDay').onclick = ()=>moveDay(1);
+
+// ---------- students ----------
+const dlgStudents = document.getElementById('dlgStudents');
+const ta = document.getElementById('taStudents');
+function openStudents(){
+  ta.value = db.students.map(s=>s.name).join('\n');
+  dlgStudents.showModal();
+}
+document.getElementById('btnStudents').onclick = openStudents;
+document.getElementById('sortStudents').onclick = ()=>{
+  ta.value = ta.value.split('\n').map(x=>x.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b,'he')).join('\n');
+};
+document.getElementById('saveStudents').onclick = ()=>{
+  const names = [...new Set(ta.value.split('\n').map(x=>x.trim()).filter(Boolean))];
+  const byName = {}; db.students.forEach(s=>byName[s.name]=s);
+  db.students = names.map(n=> byName[n] || {id:db.nextId++, name:n});
+  save(); dlgStudents.close(); render();
+  toast('נשמרו '+db.students.length+' תלמידים');
+};
+function loadDemo(){
+  ['נועה לוי','איתי כהן','מאיה פרץ','יונתן מזרחי','תמר אברהם','עומר ביטון','שירה פרידמן','דניאל אוחיון','הילה שפירא','אריאל דהן','ליאור גבאי','רוני חדד']
+    .forEach(n=>db.students.push({id:db.nextId++, name:n}));
+  save(); render();
+}
+
+// ---------- summary ----------
+const dlgSummary = document.getElementById('dlgSummary');
+let summaryText = '';
+function names(ids){ return ids.map(id=>(db.students.find(s=>s.id==id)||{}).name).filter(Boolean); }
+document.getElementById('btnSummary').onclick = ()=>{
+  const d = day(false) || {allDay:{},called:{},lessons:[]};
+  const title = 'נוכחות – ' + prettyDate(viewDate).replace(' (היום)','');
+  let html = '', txt = title + '\n';
+  const gone = names(Object.keys(d.allDay));
+  html += `<h4>🏠 לא נמצאים היום (${gone.length})</h4><p>${gone.length?esc(gone.join(', ')):'<span class="none">אין</span>'}</p>`;
+  txt += '\nלא נמצאים היום: ' + (gone.join(', ')||'אין') + '\n';
+  d.lessons.forEach((l,i)=>{
+    const miss = names(Object.keys(l.marks).filter(id=>l.marks[id]==='a' && !d.allDay[id]));
+    const unm = db.students.filter(s=>!d.allDay[s.id] && !l.marks[s.id]).map(s=>s.name);
+    html += `<h4>שיעור ${i+1} (${l.time}) – חסרים: ${miss.length}</h4><p>${miss.length?esc(miss.join(', ')):'<span class="none">אין חסרים</span>'}${unm.length?`<br><span class="none">לא סומנו: ${esc(unm.join(', '))}</span>`:''}</p>`;
+    txt += `שיעור ${i+1} (${l.time}) חסרים: ` + (miss.join(', ')||'אין') + '\n';
+  });
+  const called = names(Object.keys(d.called));
+  html += `<h4>📞 התקשרתי (${called.length})</h4><p>${called.length?esc(called.join(', ')):'<span class="none">אין</span>'}</p>`;
+  txt += 'התקשרתי: ' + (called.join(', ')||'אין');
+  document.getElementById('sumTitle').textContent = title;
+  document.getElementById('sumBody').innerHTML = html;
+  summaryText = txt;
+  dlgSummary.showModal();
+};
+document.getElementById('copySummary').onclick = ()=>{
+  navigator.clipboard.writeText(summaryText).then(()=>toast('הסיכום הועתק ✔'),()=>toast('ההעתקה לא הצליחה'));
+};
+
+// ---------- misc ----------
+let tt;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2000); }
+
+pruneOld(); save(); render();
+</script>
+</body>
+</html>
